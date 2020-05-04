@@ -3,4 +3,5 @@ Marlin 2.0.x was used for this firmware.
 Dont forget the PrusaSlcer config.
 No bltouch enabled.
 make sure to level your bed.
+The z steps are set to 800
 This should give you good quality prints out of the box.
