@@ -133,7 +133,7 @@
   #define MOTHERBOARD BOARD_BTT_SKR_MINI_E3_V1_2
 #endif
 
-// Name displayed in the LCD "Ready" message and Info menu
+// Name displayed in the LCD "Ready" message and Info menuu
 #define CUSTOM_MACHINE_NAME "Ender-5"
 
 // Printer's unique ID, used by some programs to differentiate between machines.
