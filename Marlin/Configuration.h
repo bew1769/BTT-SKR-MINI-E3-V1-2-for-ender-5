@@ -71,7 +71,7 @@
 // @section info
 
 // Author info of this build printed to the host during boot and M115
-#define STRING_CONFIG_H_AUTHOR "(thisiskeithb, Ender-5)" // Who made the changes.
+#define STRING_CONFIG_H_AUTHOR "(bew1769, Ender-5)" // Who made the changes.
 //#define CUSTOM_VERSION_FILE Version.h // Path from the root directory (no quotes)
 
 /**
@@ -133,7 +133,7 @@
   #define MOTHERBOARD BOARD_BTT_SKR_MINI_E3_V1_2
 #endif
 
-// Name displayed in the LCD "Ready" message and Info menuu
+// Name displayed in the LCD "Ready" message and Info menu
 #define CUSTOM_MACHINE_NAME "Ender-5"
 
 // Printer's unique ID, used by some programs to differentiate between machines.
