@@ -69,7 +69,7 @@ class TMCStorage {
     }
 
     struct {
-      TERN_(HAS_STEALTHCHOP, bool stealthChop_enabled = false);
+      TERN_(HAS_STEALTHCHOP, bool stealthChop_enabled = true);
       TERN_(HYBRID_THRESHOLD, uint8_t hybrid_thrs = 0);
       TERN_(USE_SENSORLESS, int16_t homing_thrs = 0);
     } stored;
