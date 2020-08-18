@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -38,7 +38,7 @@
  *   GNU General Public License for more details.                           *
  *                                                                          *
  *   To view a copy of the GNU General Public License, go to the following  *
- *   location: <http://www.gnu.org/licenses/>.                              *
+ *   location: <https://www.gnu.org/licenses/>.                              *
  ****************************************************************************/
 
 #include "../../inc/MarlinConfigPre.h"
@@ -54,6 +54,7 @@
 #include "../../module/printcounter.h"
 #include "../../libs/duration_t.h"
 #include "../../HAL/shared/Delay.h"
+#include "../../sd/cardreader.h"
 
 #if ENABLED(PRINTCOUNTER)
   #include "../../core/utility.h"
@@ -66,10 +67,6 @@
 
 #if ENABLED(EMERGENCY_PARSER)
   #include "../../feature/e_parser.h"
-#endif
-
-#if ENABLED(SDSUPPORT)
-  #include "../../sd/cardreader.h"
 #endif
 
 #if HAS_TRINAMIC_CONFIG
@@ -307,7 +304,7 @@ namespace ExtUI {
     return epos;
   }
 
-  void setAxisPosition_mm(const float position, const axis_t axis) {
+  void setAxisPosition_mm(const float position, const axis_t axis, const feedRate_t feedrate/*=0*/) {
     // Start with no limits to movement
     float min = current_position[axis] - 1000,
           max = current_position[axis] + 1000;
@@ -333,21 +330,21 @@ namespace ExtUI {
     // Delta limits XY based on the current offset from center
     // This assumes the center is 0,0
     #if ENABLED(DELTA)
-      if (axis != Z_AXIS) {
-        max = SQRT(sq((float)(DELTA_PRINTABLE_RADIUS)) - sq(current_position[Y_AXIS - axis])); // (Y_AXIS - axis) == the other axis
+      if (axis != Z) {
+        max = SQRT(sq(float(DELTA_PRINTABLE_RADIUS)) - sq(current_position[Y - axis])); // (Y - axis) == the other axis
         min = -max;
       }
     #endif
 
     current_position[axis] = constrain(position, min, max);
-    line_to_current_position(manual_feedrate_mm_s[axis]);
+    line_to_current_position(feedrate ?: manual_feedrate_mm_s[axis]);
   }
 
-  void setAxisPosition_mm(const float position, const extruder_t extruder) {
+  void setAxisPosition_mm(const float position, const extruder_t extruder, const feedRate_t feedrate/*=0*/) {
     setActiveTool(extruder, true);
 
     current_position.e = position;
-    line_to_current_position(manual_feedrate_mm_s.e);
+    line_to_current_position(feedrate ?: manual_feedrate_mm_s.e);
   }
 
   void setActiveTool(const extruder_t extruder, bool no_move) {
@@ -489,9 +486,14 @@ namespace ExtUI {
 
     int getTMCBumpSensitivity(const axis_t axis) {
       switch (axis) {
-        TERN_(X_SENSORLESS, case X: return stepperX.homing_threshold());
-        TERN_(Y_SENSORLESS, case Y: return stepperY.homing_threshold());
-        TERN_(Z_SENSORLESS, case Z: return stepperZ.homing_threshold());
+        TERN_(X_SENSORLESS,  case X:  return stepperX.homing_threshold());
+        TERN_(X2_SENSORLESS, case X2: return stepperX2.homing_threshold());
+        TERN_(Y_SENSORLESS,  case Y:  return stepperY.homing_threshold());
+        TERN_(Y2_SENSORLESS, case Y2: return stepperY2.homing_threshold());
+        TERN_(Z_SENSORLESS,  case Z:  return stepperZ.homing_threshold());
+        TERN_(Z2_SENSORLESS, case Z2: return stepperZ2.homing_threshold());
+        TERN_(Z3_SENSORLESS, case Z3: return stepperZ3.homing_threshold());
+        TERN_(Z4_SENSORLESS, case Z4: return stepperZ4.homing_threshold());
         default: return 0;
       }
     }
@@ -500,13 +502,28 @@ namespace ExtUI {
       switch (axis) {
         #if X_SENSORLESS || Y_SENSORLESS || Z_SENSORLESS
           #if X_SENSORLESS
-            case X: stepperX.homing_threshold(value); break;
+            case X:  stepperX.homing_threshold(value);  break;
+          #endif
+          #if X2_SENSORLESS
+            case X2: stepperX2.homing_threshold(value); break;
           #endif
           #if Y_SENSORLESS
             case Y: stepperY.homing_threshold(value); break;
           #endif
+          #if Y2_SENSORLESS
+            case Y2: stepperY2.homing_threshold(value); break;
+          #endif
           #if Z_SENSORLESS
             case Z: stepperZ.homing_threshold(value); break;
+          #endif
+          #if Z2_SENSORLESS
+            case Z2: stepperZ2.homing_threshold(value); break;
+          #endif
+          #if Z3_SENSORLESS
+            case Z3: stepperZ3.homing_threshold(value); break;
+          #endif
+          #if Z4_SENSORLESS
+            case Z4: stepperZ4.homing_threshold(value); break;
           #endif
         #else
           UNUSED(value);
@@ -531,7 +548,7 @@ namespace ExtUI {
 
   void setAxisSteps_per_mm(const float value, const extruder_t extruder) {
     UNUSED_E(extruder);
-    planner.settings.axis_steps_per_mm[E_AXIS_N(axis - E0)] = value;
+    planner.settings.axis_steps_per_mm[E_AXIS_N(extruder - E0)] = value;
   }
 
   feedRate_t getAxisMaxFeedrate_mm_s(const axis_t axis) {
@@ -540,7 +557,7 @@ namespace ExtUI {
 
   feedRate_t getAxisMaxFeedrate_mm_s(const extruder_t extruder) {
     UNUSED_E(extruder);
-    return planner.settings.max_feedrate_mm_s[E_AXIS_N(axis - E0)];
+    return planner.settings.max_feedrate_mm_s[E_AXIS_N(extruder - E0)];
   }
 
   void setAxisMaxFeedrate_mm_s(const feedRate_t value, const axis_t axis) {
@@ -573,25 +590,27 @@ namespace ExtUI {
   #if HAS_FILAMENT_SENSOR
     bool getFilamentRunoutEnabled()                 { return runout.enabled; }
     void setFilamentRunoutEnabled(const bool value) { runout.enabled = value; }
+    bool getFilamentRunoutState()                   { return runout.filament_ran_out; }
+    void setFilamentRunoutState(const bool value)   { runout.filament_ran_out = value; }
 
-    #ifdef FILAMENT_RUNOUT_DISTANCE_MM
+    #if HAS_FILAMENT_RUNOUT_DISTANCE
       float getFilamentRunoutDistance_mm()                 { return runout.runout_distance(); }
       void setFilamentRunoutDistance_mm(const float value) { runout.set_runout_distance(constrain(value, 0, 999)); }
     #endif
   #endif
 
-  #if HAS_CASE_LIGHT
-    bool getCaseLightState()                 { return case_light_on; }
+  #if ENABLED(CASE_LIGHT_ENABLE)
+    bool getCaseLightState()                 { return caselight.on; }
     void setCaseLightState(const bool value) {
-      case_light_on = value;
-      update_case_light();
+      caselight.on = value;
+      caselight.update_enabled();
     }
 
     #if DISABLED(CASE_LIGHT_NO_BRIGHTNESS)
-      float getCaseLightBrightness_percent()                 { return ui8_to_percent(case_light_brightness); }
+      float getCaseLightBrightness_percent()                 { return ui8_to_percent(caselight.brightness); }
       void setCaseLightBrightness_percent(const float value) {
-         case_light_brightness = map(constrain(value, 0, 100), 0, 100, 0, 255);
-         update_case_light();
+         caselight.brightness = map(constrain(value, 0, 100), 0, 100, 0, 255);
+         caselight.update_brightness();
       }
     #endif
   #endif
@@ -867,6 +886,7 @@ namespace ExtUI {
   #endif
 
   void injectCommands_P(PGM_P const gcode) { queue.inject_P(gcode); }
+  void injectCommands(char * const gcode)  { queue.inject(gcode); }
 
   bool commandsInQueue() { return (planner.movesplanned() || queue.has_commands_queued()); }
 
@@ -876,7 +896,7 @@ namespace ExtUI {
   bool isMachineHomed() { return all_axes_homed(); }
 
   PGM_P getFirmwareName_str() {
-    static const char firmware_name[] PROGMEM = "Marlin " SHORT_BUILD_VERSION;
+    static PGMSTR(firmware_name, "Marlin " SHORT_BUILD_VERSION);
     return firmware_name;
   }
 
@@ -983,7 +1003,7 @@ namespace ExtUI {
   bool FileList::seek(const uint16_t pos, const bool skip_range_check) {
     #if ENABLED(SDSUPPORT)
       if (!skip_range_check && (pos + 1) > count()) return false;
-      card.getfilename_sorted(SD_ORDER(pos, count()));
+      card.getfilename_sorted(pos);
       return card.filename[0] != '\0';
     #else
       UNUSED(pos);

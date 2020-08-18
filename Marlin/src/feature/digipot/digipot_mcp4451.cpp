@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -82,7 +82,13 @@ void digipot_i2c_init() {
     Wire.begin();
   #endif
   // Set up initial currents as defined in Configuration_adv.h
-  static const float digipot_motor_current[] PROGMEM = TERN(DIGIPOT_USE_RAW_VALUES, DIGIPOT_MOTOR_CURRENT, DIGIPOT_I2C_MOTOR_CURRENTS);
+  static const float digipot_motor_current[] PROGMEM =
+    #if ENABLED(DIGIPOT_USE_RAW_VALUES)
+      DIGIPOT_MOTOR_CURRENT
+    #else
+      DIGIPOT_I2C_MOTOR_CURRENTS
+    #endif
+  ;
   LOOP_L_N(i, COUNT(digipot_motor_current))
     digipot_i2c_set_current(i, pgm_read_float(&digipot_motor_current[i]));
 }

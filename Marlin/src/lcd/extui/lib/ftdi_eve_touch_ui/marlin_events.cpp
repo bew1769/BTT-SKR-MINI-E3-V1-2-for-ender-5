@@ -17,7 +17,7 @@
  *   GNU General Public License for more details.                           *
  *                                                                          *
  *   To view a copy of the GNU General Public License, go to the following  *
- *   location: <http://www.gnu.org/licenses/>.                              *
+ *   location: <https://www.gnu.org/licenses/>.                              *
  ****************************************************************************/
 
 #include "compat.h"
@@ -150,19 +150,19 @@ namespace ExtUI {
   #if HAS_PID_HEATING
     void onPidTuning(const result_t rst) {
       // Called for temperature PID tuning result
-      SERIAL_ECHOLNPAIR("OnPidTuning:", rst);
+      //SERIAL_ECHOLNPAIR("OnPidTuning:", rst);
       switch (rst) {
         case PID_BAD_EXTRUDER_NUM:
-          StatusScreen::setStatusMessage(STR_PID_BAD_EXTRUDER_NUM);
+          StatusScreen::setStatusMessage(GET_TEXT_F(MSG_PID_BAD_EXTRUDER_NUM));
           break;
         case PID_TEMP_TOO_HIGH:
-          StatusScreen::setStatusMessage(STR_PID_TEMP_TOO_HIGH);
+          StatusScreen::setStatusMessage(GET_TEXT_F(MSG_PID_TEMP_TOO_HIGH));
           break;
         case PID_TUNING_TIMEOUT:
-          StatusScreen::setStatusMessage(STR_PID_TIMEOUT);
+          StatusScreen::setStatusMessage(GET_TEXT_F(MSG_PID_TIMEOUT));
           break;
         case PID_DONE:
-          StatusScreen::setStatusMessage(STR_PID_AUTOTUNE_FINISHED);
+          StatusScreen::setStatusMessage(GET_TEXT_F(MSG_PID_AUTOTUNE_DONE));
           break;
       }
       GOTO_SCREEN(StatusScreen);

@@ -17,19 +17,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 #if defined(ARDUINO_ARCH_STM32) && !defined(STM32GENERIC)
 
 #include "HAL.h"
+#include "usb_serial.h"
 
 #include "../../inc/MarlinConfig.h"
 #include "../shared/Delay.h"
-
-#if HAS_TMC_SW_SERIAL
-  #include "SoftwareSerial.h"
-#endif
 
 #if ENABLED(SRAM_EEPROM_EMULATION)
   #if STM32F7xx
@@ -66,7 +63,7 @@ uint16_t HAL_adc_result;
 void HAL_init() {
   FastIO_init();
 
-  #if ENABLED(SDSUPPORT)
+  #if ENABLED(SDSUPPORT) && DISABLED(SDIO_SUPPORT)
     OUT_WRITE(SDSS, HIGH); // Try to set SDSS inactive before any other SPI users start up
   #endif
 
@@ -82,11 +79,9 @@ void HAL_init() {
     while (!LL_PWR_IsActiveFlag_BRR());   // Wait until backup regulator is initialized
   #endif
 
-  #if HAS_TMC_SW_SERIAL
-    SoftwareSerial::setInterruptPriority(SWSERIAL_TIMER_IRQ_PRIO, 0);
-  #endif
+  SetTimerInterruptPriorities();
 
-  TERN_(HAS_TMC_SW_SERIAL, SoftwareSerial::setInterruptPriority(SWSERIAL_TIMER_IRQ_PRIO, 0));
+  TERN_(EMERGENCY_PARSER, USB_Hook_init());
 }
 
 void HAL_clear_reset_source() { __HAL_RCC_CLEAR_RESET_FLAGS(); }

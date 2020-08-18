@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -86,7 +86,7 @@ static inline void _lcd_level_bed_corners_homing() {
             ui.goto_previous_screen_no_defer();
           }
         , GET_TEXT(TERN(LEVEL_CENTER_TOO, MSG_LEVEL_BED_NEXT_POINT, MSG_NEXT_CORNER))
-        , (PGM_P)nullptr, PSTR("?")
+        , (const char*)nullptr, PSTR("?")
       );
     });
     ui.set_selection(true);

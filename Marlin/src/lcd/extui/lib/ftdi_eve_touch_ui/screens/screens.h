@@ -17,7 +17,7 @@
  *   GNU General Public License for more details.                           *
  *                                                                          *
  *   To view a copy of the GNU General Public License, go to the following  *
- *   location: <http://www.gnu.org/licenses/>.                              *
+ *   location: <https://www.gnu.org/licenses/>.                              *
  ****************************************************************************/
 
 #pragma once
@@ -63,7 +63,7 @@ enum {
 #else
   JERK_SCREEN_CACHE,
 #endif
-#if HAS_CASE_LIGHT
+#if ENABLED(CASE_LIGHT_ENABLE)
   CASE_LIGHT_SCREEN_CACHE,
 #endif
 #if EITHER(LIN_ADVANCE, FILAMENT_RUNOUT_SENSOR)
@@ -103,7 +103,7 @@ enum {
 
 class BaseScreen : public UIScreen {
   protected:
-    #if LCD_TIMEOUT_TO_STATUS
+    #if LCD_TIMEOUT_TO_STATUS > 0
       static uint32_t last_interaction;
     #endif
 
@@ -579,7 +579,7 @@ class DefaultAccelerationScreen : public BaseNumericAdjustmentScreen, public Cac
   };
 #endif
 
-#if HAS_CASE_LIGHT
+#if ENABLED(CASE_LIGHT_ENABLE)
   class CaseLightScreen : public BaseNumericAdjustmentScreen, public CachedScreen<CASE_LIGHT_SCREEN_CACHE> {
     public:
       static void onRedraw(draw_mode_t);

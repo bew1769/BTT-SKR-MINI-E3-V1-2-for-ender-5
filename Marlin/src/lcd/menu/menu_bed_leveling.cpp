@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -279,8 +279,8 @@ void menu_bed_leveling() {
   #endif
 
   #if ENABLED(EEPROM_SETTINGS)
-    ACTION_ITEM(MSG_LOAD_EEPROM, lcd_load_settings);
-    ACTION_ITEM(MSG_STORE_EEPROM, lcd_store_settings);
+    ACTION_ITEM(MSG_LOAD_EEPROM, ui.load_settings);
+    ACTION_ITEM(MSG_STORE_EEPROM, ui.store_settings);
   #endif
   END_MENU();
 }

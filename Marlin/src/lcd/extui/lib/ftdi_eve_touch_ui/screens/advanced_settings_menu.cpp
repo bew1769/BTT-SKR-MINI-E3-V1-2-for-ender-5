@@ -17,7 +17,7 @@
  *   GNU General Public License for more details.                           *
  *                                                                          *
  *   To view a copy of the GNU General Public License, go to the following  *
- *   location: <http://www.gnu.org/licenses/>.                              *
+ *   location: <https://www.gnu.org/licenses/>.                              *
  ****************************************************************************/
 
 #include "../config.h"
@@ -38,7 +38,7 @@ void AdvancedSettingsMenu::onRedraw(draw_mode_t what) {
   }
 
     #ifdef TOUCH_UI_PORTRAIT
-      #if EITHER(HAS_CASE_LIGHT, SENSORLESS_HOMING)
+      #if EITHER(CASE_LIGHT_ENABLE, SENSORLESS_HOMING)
         #define GRID_ROWS 9
       #else
         #define GRID_ROWS 8
@@ -59,7 +59,7 @@ void AdvancedSettingsMenu::onRedraw(draw_mode_t what) {
       #define BACKLASH_POS            BTN_POS(2,7), BTN_SIZE(1,1)
       #define CASE_LIGHT_POS          BTN_POS(1,8), BTN_SIZE(1,1)
       #define TMC_HOMING_THRS_POS     BTN_POS(2,8), BTN_SIZE(1,1)
-      #if EITHER(HAS_CASE_LIGHT, SENSORLESS_HOMING)
+      #if EITHER(CASE_LIGHT_ENABLE, SENSORLESS_HOMING)
         #define BACK_POS              BTN_POS(1,9), BTN_SIZE(2,1)
       #else
         #define BACK_POS              BTN_POS(1,8), BTN_SIZE(2,1)
@@ -91,7 +91,7 @@ void AdvancedSettingsMenu::onRedraw(draw_mode_t what) {
        .font(Theme::font_medium)
       .enabled(ENABLED(HAS_BED_PROBE))
       .tag(2) .button( ZPROBE_ZOFFSET_POS,     GET_TEXT_F(MSG_ZPROBE_ZOFFSET))
-      .enabled(ENABLED(HAS_CASE_LIGHT))
+      .enabled(ENABLED(CASE_LIGHT_ENABLE))
       .tag(16).button( CASE_LIGHT_POS,         GET_TEXT_F(MSG_CASE_LIGHT))
       .tag(3) .button( STEPS_PER_MM_POS,       GET_TEXT_F(MSG_STEPS_PER_MM))
       .enabled(ENABLED(HAS_TRINAMIC_CONFIG))
@@ -99,9 +99,8 @@ void AdvancedSettingsMenu::onRedraw(draw_mode_t what) {
       .enabled(ENABLED(SENSORLESS_HOMING))
       .tag(14).button( TMC_HOMING_THRS_POS,    GET_TEXT_F(MSG_TMC_HOMING_THRS))
       .enabled(EITHER(HAS_MULTI_HOTEND, BLTOUCH))
-      .tag(4) .button( OFFSETS_POS,            GET_TEXT_F(TERN(HAS_MULTI_HOTEND, MSG_OFFSETS_MENU, MSG_RESET_BLTOUCH))
-      .enabled(EITHER(LIN_ADVANCE, FILAMENT_RUNOUT_SENSOR)
-      )
+      .tag(4) .button( OFFSETS_POS,            GET_TEXT_F(TERN(HAS_MULTI_HOTEND, MSG_OFFSETS_MENU, MSG_RESET_BLTOUCH)))
+      .enabled(EITHER(LIN_ADVANCE, FILAMENT_RUNOUT_SENSOR))
       .tag(11).button( FILAMENT_POS,           GET_TEXT_F(MSG_FILAMENT))
       .tag(12).button( ENDSTOPS_POS,           GET_TEXT_F(MSG_LCD_ENDSTOPS))
       .tag(15).button( DISPLAY_POS,            GET_TEXT_F(MSG_DISPLAY_MENU))
@@ -109,7 +108,7 @@ void AdvancedSettingsMenu::onRedraw(draw_mode_t what) {
       .tag(10).button( RESTORE_DEFAULTS_POS,   GET_TEXT_F(MSG_RESTORE_DEFAULTS))
       .tag(5) .button( VELOCITY_POS,           GET_TEXT_F(MSG_VELOCITY))
       .tag(6) .button( ACCELERATION_POS,       GET_TEXT_F(MSG_ACCELERATION))
-      .tag(7) .button( JERK_POS,               GET_TEXT_F(TERN(HAS_JUNCTION_DEVIATION, MSG_JUNCTION_DEVIATION, MSG_JERK))
+      .tag(7) .button( JERK_POS,               GET_TEXT_F(TERN(HAS_JUNCTION_DEVIATION, MSG_JUNCTION_DEVIATION, MSG_JERK)))
       .enabled(ENABLED(BACKLASH_GCODE))
       .tag(8).button( BACKLASH_POS,            GET_TEXT_F(MSG_BACKLASH))
       .colors(action_btn)
@@ -150,7 +149,7 @@ bool AdvancedSettingsMenu::onTouchEnd(uint8_t tag) {
     case 14: GOTO_SCREEN(StepperBumpSensitivityScreen); break;
     #endif
     case 15: GOTO_SCREEN(DisplayTuningScreen); break;
-    #if HAS_CASE_LIGHT
+    #if ENABLED(CASE_LIGHT_ENABLE)
     case 16: GOTO_SCREEN(CaseLightScreen); break;
     #endif
     default: return false;

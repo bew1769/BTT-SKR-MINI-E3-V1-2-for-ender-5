@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -27,10 +27,13 @@
 
 #include "../../inc/MarlinConfig.h"
 
-#if BOTH(USE_SHARED_EEPROM, SPI_EEPROM)
+#if ENABLED(SPI_EEPROM)
 
-#include "../HAL.h"
 #include "eeprom_if.h"
+
+void eeprom_init() {}
+
+#if ENABLED(USE_SHARED_EEPROM)
 
 #define CMD_WREN  6   // WREN
 #define CMD_READ  2   // WRITE
@@ -80,4 +83,5 @@ void eeprom_write_byte(uint8_t* pos, uint8_t value) {
   delay(EEPROM_WRITE_DELAY);   // wait for page write to complete
 }
 
-#endif // USE_SHARED_EEPROM && I2C_EEPROM
+#endif // USE_SHARED_EEPROM
+#endif // I2C_EEPROM

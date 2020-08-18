@@ -16,7 +16,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
 
@@ -32,10 +32,6 @@
 
 #if HAS_BUZZER
   #include "../../libs/buzzer.h"
-#endif
-
-#if ENABLED(EEPROM_SETTINGS)
-  #include "../../module/configuration_store.h"
 #endif
 
 #if WATCH_HOTENDS || WATCH_BED
@@ -65,7 +61,8 @@ typedef struct {
 menuPosition screen_history[6];
 uint8_t screen_history_depth = 0;
 
-uint8_t MenuItemBase::itemIndex;  // Index number for draw and action
+int8_t MenuItemBase::itemIndex;   // Index number for draw and action
+PGM_P MenuItemBase::itemString;   // A PSTR for substitution
 chimera_t editable;               // Value Editing
 
 // Menu Edit Items
@@ -88,9 +85,8 @@ void MarlinUI::save_previous_screen() {
 }
 
 void MarlinUI::_goto_previous_screen(TERN_(TURBO_BACK_MENU_ITEM, const bool is_back/*=false*/)) {
-  #if DISABLED(TURBO_BACK_MENU_ITEM)
-    constexpr bool is_back = false;
-  #endif
+  TERN(TURBO_BACK_MENU_ITEM,,constexpr bool is_back = false);
+  TERN_(HAS_TOUCH_XPT2046, on_edit_screen = false);
   if (screen_history_depth > 0) {
     menuPosition &sh = screen_history[--screen_history_depth];
     goto_screen(sh.menu_function,
@@ -137,7 +133,7 @@ void MenuItem_gcode::action(PGM_P const, PGM_P const pgcode) { queue.inject_P(pg
  *       MenuItem_int3::draw(encoderLine == _thisItemNr, _lcdLineNr, plabel, &feedrate_percentage, 10, 999)
  */
 void MenuEditItemBase::edit_screen(strfunc_t strfunc, loadfunc_t loadfunc) {
-  TERN_(TOUCH_BUTTONS, ui.repeat_delay = BUTTON_DELAY_EDIT);
+  TERN_(HAS_TOUCH_XPT2046, ui.repeat_delay = BUTTON_DELAY_EDIT);
   if (int32_t(ui.encoderPosition) < 0) ui.encoderPosition = 0;
   if (int32_t(ui.encoderPosition) > maxEditValue) ui.encoderPosition = maxEditValue;
   if (ui.should_draw())
@@ -159,6 +155,7 @@ void MenuEditItemBase::goto_edit_screen(
   const screenFunc_t cb,  // Callback after edit
   const bool le           // Flag to call cb() during editing
 ) {
+  TERN_(HAS_TOUCH_XPT2046, ui.on_edit_screen = true);
   ui.screen_changed = true;
   ui.save_previous_screen();
   ui.refresh();
@@ -189,6 +186,7 @@ DEFINE_MENU_EDIT_ITEM(float43);     // 1.234
 DEFINE_MENU_EDIT_ITEM(float5);      // 12345      right-justified
 DEFINE_MENU_EDIT_ITEM(float5_25);   // 12345      right-justified (25 increment)
 DEFINE_MENU_EDIT_ITEM(float51);     // 1234.5     right-justified
+DEFINE_MENU_EDIT_ITEM(float31sign); // +12.3
 DEFINE_MENU_EDIT_ITEM(float41sign); // +123.4
 DEFINE_MENU_EDIT_ITEM(float51sign); // +1234.5
 DEFINE_MENU_EDIT_ITEM(float52sign); // +123.45
@@ -216,7 +214,7 @@ bool printer_busy() {
 void MarlinUI::goto_screen(screenFunc_t screen, const uint16_t encoder/*=0*/, const uint8_t top/*=0*/, const uint8_t items/*=0*/) {
   if (currentScreen != screen) {
 
-    TERN_(TOUCH_BUTTONS, repeat_delay = BUTTON_DELAY_MENU);
+    TERN_(HAS_TOUCH_XPT2046, repeat_delay = BUTTON_DELAY_MENU);
 
     TERN_(LCD_SET_PROGRESS_MANUALLY, progress_reset());
 
@@ -234,7 +232,7 @@ void MarlinUI::goto_screen(screenFunc_t screen, const uint16_t encoder/*=0*/, co
           screen = TERN(BABYSTEP_ZPROBE_OFFSET, lcd_babystep_zoffset, lcd_babystep_z);
         else {
           #if ENABLED(MOVE_Z_WHEN_IDLE)
-            move_menu_scale = MOVE_Z_IDLE_MULTIPLICATOR;
+            ui.manual_move.menu_scale = MOVE_Z_IDLE_MULTIPLICATOR;
             screen = lcd_move_z;
           #endif
         }
@@ -245,7 +243,7 @@ void MarlinUI::goto_screen(screenFunc_t screen, const uint16_t encoder/*=0*/, co
     encoderPosition = encoder;
     encoderTopLine = top;
     screen_items = items;
-    if (screen == status_screen) {
+    if (on_status_screen()) {
       defer_status_screen(false);
       TERN_(AUTO_BED_LEVELING_UBL, ubl.lcd_map_control = false);
       screen_history_depth = 0;
@@ -256,7 +254,7 @@ void MarlinUI::goto_screen(screenFunc_t screen, const uint16_t encoder/*=0*/, co
     // Re-initialize custom characters that may be re-used
     #if HAS_CHARACTER_LCD
       if (TERN1(AUTO_BED_LEVELING_UBL, !ubl.lcd_map_control))
-        set_custom_characters(screen == status_screen ? CHARSET_INFO : CHARSET_MENU);
+        set_custom_characters(on_status_screen() ? CHARSET_INFO : CHARSET_MENU);
     #endif
 
     refresh(LCDVIEW_CALL_REDRAW_NEXT);
@@ -347,7 +345,7 @@ void scroll_screen(const uint8_t limit, const bool is_menu) {
     ui.defer_status_screen();
     const bool do_probe = DISABLED(BABYSTEP_HOTEND_Z_OFFSET) || active_extruder == 0;
     if (ui.encoderPosition) {
-      const int16_t babystep_increment = int16_t(ui.encoderPosition) * (BABYSTEP_MULTIPLICATOR_Z);
+      const int16_t babystep_increment = int16_t(ui.encoderPosition) * (BABYSTEP_SIZE_Z);
       ui.encoderPosition = 0;
 
       const float diff = planner.steps_to_mm[Z_AXIS] * babystep_increment,
@@ -383,11 +381,6 @@ void scroll_screen(const uint8_t limit, const bool is_menu) {
 
 #endif // BABYSTEP_ZPROBE_OFFSET
 
-#if ENABLED(EEPROM_SETTINGS)
-  void lcd_store_settings() { ui.completion_feedback(settings.save()); }
-  void lcd_load_settings()  { ui.completion_feedback(settings.load()); }
-#endif
-
 void _lcd_draw_homing() {
   constexpr uint8_t line = (LCD_HEIGHT - 1) / 2;
   if (ui.should_draw()) MenuItem_static::draw(line, GET_TEXT(MSG_LEVEL_BED_HOMING));
@@ -411,11 +404,16 @@ bool MarlinUI::update_selection() {
   return selection;
 }
 
-void MenuItem_confirm::select_screen(PGM_P const yes, PGM_P const no, selectFunc_t yesFunc, selectFunc_t noFunc, PGM_P const pref, const char * const string/*=nullptr*/, PGM_P const suff/*=nullptr*/) {
+void MenuItem_confirm::select_screen(
+  PGM_P const yes, PGM_P const no,
+  selectFunc_t yesFunc, selectFunc_t noFunc,
+  PGM_P const pref, const char * const string/*=nullptr*/, PGM_P const suff/*=nullptr*/
+) {
   const bool ui_selection = ui.update_selection(), got_click = ui.use_click();
   if (got_click || ui.should_draw()) {
     draw_select_screen(yes, no, ui_selection, pref, string, suff);
     if (got_click) { ui_selection ? yesFunc() : noFunc(); }
+    ui.defer_status_screen();
   }
 }
 
