@@ -242,3 +242,8 @@
 
 #define ON_BOARD_SPI_DEVICE 1                     // SPI1
 #define ONBOARD_SD_CS_PIN                   PA4   // Chip select for "System" SD card
+
+#define FLASH_EEPROM_EMULATION
+#define EEPROM_PAGE_SIZE (0x800) // 2KB
+#define EEPROM_START_ADDRESS (0x8000000 + (256 * 1024) - 2 * EEPROM_PAGE_SIZE)
+#define E2END (EEPROM_PAGE_SIZE - 1)
