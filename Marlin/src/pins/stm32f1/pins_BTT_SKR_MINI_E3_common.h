@@ -34,7 +34,7 @@
 #if EITHER(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
   #define FLASH_EEPROM_EMULATION
   #define EEPROM_PAGE_SIZE     (0x800U)           // 2KB
-  #define EEPROM_START_ADDRESS (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
+  #define EEPROM_START_ADDRESS (0x8000000UL + (7) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
   #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE  // 2KB
 #endif
 
@@ -48,12 +48,12 @@
 //
 #define X_STOP_PIN                          PC0   // "X-STOP"
 #define Y_STOP_PIN                          PC1   // "Y-STOP"
-#define Z_STOP_PIN                          PC2   // "Z-STOP"
+#define Z_STOP_PIN                          PC14   // "Z-STOP"
 
 //
 // Z Probe must be this pin
 //
-#define Z_MIN_PROBE_PIN                     PC14  // "PROBE"
+//#define Z_MIN_PROBE_PIN                     PC14  // "PROBE"
 
 //
 // Filament Runout Sensor
