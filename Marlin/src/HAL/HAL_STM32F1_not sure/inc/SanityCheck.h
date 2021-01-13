@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
@@ -37,7 +37,15 @@
   #error "FAST_PWM_FAN is not yet implemented for this platform."
 #endif
 
-#if !defined(HAVE_SW_SERIAL) && HAS_TMC220x
+#if !defined(HAVE_SW_SERIAL) && HAS_TMC_SW_SERIAL
   #warning "With TMC2208/9 consider using SoftwareSerialM with HAVE_SW_SERIAL and appropriate SS_TIMER."
   #error "Missing SoftwareSerial implementation."
+#endif
+
+#if ENABLED(SDCARD_EEPROM_EMULATION) && DISABLED(SDSUPPORT)
+  #undef SDCARD_EEPROM_EMULATION // Avoid additional error noise
+  #if USE_FALLBACK_EEPROM
+    #warning "EEPROM type not specified. Fallback is SDCARD_EEPROM_EMULATION."
+  #endif
+  #error "SDCARD_EEPROM_EMULATION requires SDSUPPORT. Enable SDSUPPORT or choose another EEPROM emulation."
 #endif

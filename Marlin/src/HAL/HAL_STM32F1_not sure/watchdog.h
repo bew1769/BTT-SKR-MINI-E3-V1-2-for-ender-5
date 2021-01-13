@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
@@ -22,22 +22,23 @@
 #pragma once
 
 /**
- * Test STM32F1-specific configuration values for errors at compile-time.
+ * HAL for stm32duino.com based on Libmaple and compatible (STM32F1)
  */
 
-#if ENABLED(EMERGENCY_PARSER)
-  #error "EMERGENCY_PARSER is not yet implemented for STM32F1. Disable EMERGENCY_PARSER to continue."
-#endif
+#include <libmaple/iwdg.h>
 
-#if ENABLED(SDIO_SUPPORT) && DISABLED(SDSUPPORT)
-  #error "SDIO_SUPPORT requires SDSUPPORT. Enable SDSUPPORT to continue."
-#endif
+/**
+ *  The watchdog clock is 40Khz. We need a 4 seconds interval, so use a /256 preescaler and
+ *  625 reload value (counts down to 0)
+ *  use 1250 for 8 seconds
+ */
+#define STM32F1_WD_RELOAD 625
 
-#if ENABLED(FAST_PWM_FAN)
-  #error "FAST_PWM_FAN is not yet implemented for this platform."
-#endif
+// Arduino STM32F1 core now has watchdog support
 
-#if !defined(HAVE_SW_SERIAL) && HAS_TMC220x
-  #warning "With TMC2208/9 consider using SoftwareSerialM with HAVE_SW_SERIAL and appropriate SS_TIMER."
-  #error "Missing SoftwareSerial implementation."
-#endif
+// Initialize watchdog with a 4 second countdown time
+void watchdog_init();
+
+// Reset watchdog. MUST be called at least every 4 seconds after the
+// first watchdog_init or STM32F1 will reset.
+void HAL_watchdog_refresh();

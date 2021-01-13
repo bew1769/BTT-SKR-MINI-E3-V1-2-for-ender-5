@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 #include "../../../inc/MarlinConfig.h"
 
-#if HAS_GRAPHICAL_LCD && ENABLED(FORCE_SOFT_SPI)
+#if BOTH(HAS_GRAPHICAL_LCD, FORCE_SOFT_SPI)
 
 #include "../HAL.h"
 #include <U8glib.h>
@@ -32,7 +32,7 @@
 static uint8_t SPI_speed = SPI_SPEED;
 
 static inline uint8_t swSpiTransfer_mode_0(uint8_t b, const uint8_t spi_speed, const pin_t miso_pin=-1) {
-  for (uint8_t i = 0; i < 8; i++) {
+  LOOP_L_N(i, 8) {
     if (spi_speed == 0) {
       WRITE(DOGLCD_MOSI, !!(b & 0x80));
       WRITE(DOGLCD_SCK, HIGH);
@@ -42,16 +42,16 @@ static inline uint8_t swSpiTransfer_mode_0(uint8_t b, const uint8_t spi_speed, c
     }
     else {
       const uint8_t state = (b & 0x80) ? HIGH : LOW;
-      for (uint8_t j = 0; j < spi_speed; j++)
+      LOOP_L_N(j, spi_speed)
         WRITE(DOGLCD_MOSI, state);
 
-      for (uint8_t j = 0; j < spi_speed + (miso_pin >= 0 ? 0 : 1); j++)
+      LOOP_L_N(j, spi_speed + (miso_pin >= 0 ? 0 : 1))
         WRITE(DOGLCD_SCK, HIGH);
 
       b <<= 1;
       if (miso_pin >= 0 && READ(miso_pin)) b |= 1;
 
-      for (uint8_t j = 0; j < spi_speed; j++)
+      LOOP_L_N(j, spi_speed)
         WRITE(DOGLCD_SCK, LOW);
     }
   }
@@ -59,7 +59,7 @@ static inline uint8_t swSpiTransfer_mode_0(uint8_t b, const uint8_t spi_speed, c
 }
 
 static inline uint8_t swSpiTransfer_mode_3(uint8_t b, const uint8_t spi_speed, const pin_t miso_pin=-1) {
-  for (uint8_t i = 0; i < 8; i++) {
+  LOOP_L_N(i, 8) {
     const uint8_t state = (b & 0x80) ? HIGH : LOW;
     if (spi_speed == 0) {
       WRITE(DOGLCD_SCK, LOW);
@@ -68,13 +68,13 @@ static inline uint8_t swSpiTransfer_mode_3(uint8_t b, const uint8_t spi_speed, c
       WRITE(DOGLCD_SCK, HIGH);
     }
     else {
-      for (uint8_t j = 0; j < spi_speed + (miso_pin >= 0 ? 0 : 1); j++)
+      LOOP_L_N(j, spi_speed + (miso_pin >= 0 ? 0 : 1))
         WRITE(DOGLCD_SCK, LOW);
 
-      for (uint8_t j = 0; j < spi_speed; j++)
+      LOOP_L_N(j, spi_speed)
         WRITE(DOGLCD_MOSI, state);
 
-      for (uint8_t j = 0; j < spi_speed; j++)
+      LOOP_L_N(j, spi_speed)
         WRITE(DOGLCD_SCK, HIGH);
     }
     b <<= 1;
