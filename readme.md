@@ -1,3 +1,5 @@
+This firmware is for bltouch and runout sensor.  Works good. You may need to adjust z offset, but that is easy with babystepping.
+
 # Marlin 3D Printer Firmware
 
 ![GitHub](https://img.shields.io/github/license/marlinfirmware/marlin.svg)
